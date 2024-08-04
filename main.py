@@ -43,7 +43,7 @@ def main():
     image = dec_to_image(data)
     resized = image.resize((1500, 1500), resample=1)
     resized.show()
-    resized.save("output.png")
+    resized.save("output.jpg")
 
 
 main()
