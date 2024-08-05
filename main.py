@@ -2,6 +2,7 @@ import argparse
 import hashlib
 
 from PIL import Image
+from halo import Halo
 
 
 def text_to_sha256(text):
@@ -37,13 +38,14 @@ def dec_to_image(dec_str):
 
 
 def main(text):
-    hash_result = text_to_sha256(text)
-    data = hash_to_dec(hash_result)
-    image = dec_to_image(data)
-    resized = image.resize((1500, 1500), resample=1)
-    resized.show()
-    filename = text + ".jpg"
-    resized.save(filename)
+    with Halo(text="Converting data…", color="white"):
+        hash_result = text_to_sha256(text)
+        data = hash_to_dec(hash_result)
+        image = dec_to_image(data)
+        resized = image.resize((1500, 1500), resample=1)
+        resized.show()
+        filename = text + ".jpg"
+        resized.save(filename)
 
 
 parser = argparse.ArgumentParser()
