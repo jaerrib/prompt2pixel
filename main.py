@@ -1,3 +1,4 @@
+import argparse
 import hashlib
 
 from PIL import Image
@@ -35,9 +36,7 @@ def dec_to_image(dec_str):
     return img
 
 
-def main():
-    print("Enter a string: ")
-    text = input()
+def main(text):
     hash_result = text_to_sha256(text)
     data = hash_to_dec(hash_result)
     image = dec_to_image(data)
@@ -46,4 +45,9 @@ def main():
     resized.save("output.jpg")
 
 
-main()
+parser = argparse.ArgumentParser()
+parser.add_argument("text", type=str, help="The input string")
+
+args = vars(parser.parse_args())
+
+main(text=args["text"])
