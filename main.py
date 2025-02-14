@@ -45,8 +45,7 @@ def main(text: str, cmyk_format: bool) -> None:
         resized = image.resize((1500, 1500), resample=1)
         if cmyk_format:
             resized = resized.convert("CMYK")
-        filename = text + "-" + str(resized.mode) + ".jpg"
-        resized.show()
+        filename = text[:32] + "-" + str(resized.mode) + ".jpg"
         resized.save(filename)
 
 
