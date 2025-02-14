@@ -37,20 +37,26 @@ def dec_to_image(dec_str):
     return img
 
 
-def main(text):
+def main(text, cmyk_format):
     with Halo(text="Converting data…", color="white"):
         hash_result = text_to_sha256(text)
         data = hash_to_dec(hash_result)
         image = dec_to_image(data)
         resized = image.resize((1500, 1500), resample=1)
+        if cmyk_format:
+            resized = resized.convert("CMYK")
+        filename = text + "-" + str(resized.mode) + ".jpg"
         resized.show()
-        filename = text + ".jpg"
         resized.save(filename)
 
 
 parser = argparse.ArgumentParser()
 parser.add_argument("text", type=str, help="The input string")
-
-args = vars(parser.parse_args())
-
-main(text=args["text"])
+parser.add_argument(
+    "-c",
+    "--cmyk_format",
+    help="Add to export CMYK instead of RGB",
+    action="store_true",
+)
+args = parser.parse_args()
+main(text=args.text, cmyk_format=args.cmyk_format)
