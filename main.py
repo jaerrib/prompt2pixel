@@ -5,39 +5,39 @@ from PIL import Image
 from halo import Halo
 
 
-def text_to_sha256(text):
+def text_to_sha256(text: str) -> str:
     return hashlib.sha256(text.encode()).hexdigest()
 
 
-def hash_to_dec(s):
-    d = []
-    for i in range(0, len(s) - 1, 2):
-        a = s[i]
-        b = s[i + 1]
+def hash_to_dec(hash_string: str) -> list[int]:
+    integer_list = []
+    for i in range(0, len(hash_string) - 1, 2):
+        a = hash_string[i]
+        b = hash_string[i + 1]
         c = a + b
         dec = int(c, 16)
-        d.append(dec)
-    return d
+        integer_list.append(dec)
+    return integer_list
 
 
-def dec_to_image(dec_str):
+def dec_to_image(dec_str: list[int]) -> Image.Image:
     size = (8, 8)
     img = Image.new("RGB", size)
     pixels = img.load()
     index = 0
-    for i in range(size[0]):
-        for j in range(size[1]):
+    for y in range(size[0]):
+        for x in range(size[1]):
             r = dec_str[index]
             g = dec_str[index + 1]
             b = dec_str[index + 2]
-            pixels[i, j] = (r, g, b)
+            pixels[y, x] = (r, g, b)
             index += 1
             if index > len(dec_str) / 3:
                 index = index - len(dec_str)
     return img
 
 
-def main(text, cmyk_format):
+def main(text: str, cmyk_format: bool) -> None:
     with Halo(text="Converting data…", color="white"):
         hash_result = text_to_sha256(text)
         data = hash_to_dec(hash_result)
