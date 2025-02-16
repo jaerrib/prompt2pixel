@@ -5,6 +5,8 @@ import math
 from halo import Halo
 from PIL import Image
 
+SIZE: tuple[int] = (8, 8)
+
 
 def text_to_sha256(text: str) -> str:
     return hashlib.sha256(text.encode()).hexdigest()
@@ -21,7 +23,7 @@ def hash_to_dec(hash_string: str) -> list[int]:
     return integer_list
 
 
-def rgb_to_cmyk(rgb: list[int]) -> tuple[int, int, int, int]:
+def rgb_to_cmyk(rgb: list[int]) -> tuple[int]:
     r, g, b = [x / 255.0 for x in rgb]
 
     k = 1 - max(r, g, b)
@@ -40,27 +42,35 @@ def rgb_to_cmyk(rgb: list[int]) -> tuple[int, int, int, int]:
     )
 
 
-def dec_to_image(dec_str: list[int], cmyk_format: bool) -> Image.Image:
-    size: tuple(int) = (8, 8)
+def create_image(cmyk_format: bool) -> Image.Image:
     if cmyk_format:
-        img = Image.new("CMYK", size)
+        img = Image.new("CMYK", SIZE)
     else:
-        img = Image.new("RGB", size)
+        img = Image.new("RGB", SIZE)
+    return img
+
+
+def set_pixels(img: Image.Image, dec_str: list[int], cmyk_format: bool) -> None:
     pixels = img.load()
     index = 0
-    for y_pos in range(size[0]):
-        for x_pos in range(size[1]):
+    for y_pos in range(SIZE[0]):
+        for x_pos in range(SIZE[1]):
             r = dec_str[index]
             g = dec_str[index + 1]
             b = dec_str[index + 2]
             if cmyk_format:
-                (c, m, y, k) = rgb_to_cmyk([r, g, b])
-                pixels[y_pos, x_pos] = (c, m, y, k)
+                c, m, y, k = rgb_to_cmyk([r, g, b])
+                pixels[x_pos, y_pos] = (c, m, y, k)
             else:
-                pixels[y_pos, x_pos] = (r, g, b)
+                pixels[x_pos, y_pos] = (r, g, b)
             index += 1
-            if index > len(dec_str) / 3:
+            if index > (len(dec_str)) / 3:
                 index = index - len(dec_str)
+
+
+def dec_to_image(dec_str: list[int], cmyk_format: bool) -> Image.Image:
+    img = create_image(cmyk_format)
+    set_pixels(img, dec_str, cmyk_format)
     return img
 
 
