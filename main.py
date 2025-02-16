@@ -1,8 +1,9 @@
 import argparse
 import hashlib
+import math
 
-from PIL import Image
 from halo import Halo
+from PIL import Image
 
 
 def text_to_sha256(text: str) -> str:
@@ -20,17 +21,43 @@ def hash_to_dec(hash_string: str) -> list[int]:
     return integer_list
 
 
-def dec_to_image(dec_str: list[int]) -> Image.Image:
-    size = (8, 8)
-    img = Image.new("RGB", size)
+def rgb_to_cmyk(rgb: list[int]) -> tuple[int, int, int, int]:
+    r, g, b = [x / 255.0 for x in rgb]
+
+    k = 1 - max(r, g, b)
+    if k == 255:
+        return (0, 0, 0, 255)
+
+    c = (1 - r - k) / (1 - k)
+    m = (1 - g - k) / (1 - k)
+    y = (1 - b - k) / (1 - k)
+
+    return (
+        math.ceil(c * 255),
+        math.ceil(m * 255),
+        math.ceil(y * 255),
+        math.ceil(k * 255),
+    )
+
+
+def dec_to_image(dec_str: list[int], cmyk_format: bool) -> Image.Image:
+    size: tuple(int) = (8, 8)
+    if cmyk_format:
+        img = Image.new("CMYK", size)
+    else:
+        img = Image.new("RGB", size)
     pixels = img.load()
     index = 0
-    for y in range(size[0]):
-        for x in range(size[1]):
+    for y_pos in range(size[0]):
+        for x_pos in range(size[1]):
             r = dec_str[index]
             g = dec_str[index + 1]
             b = dec_str[index + 2]
-            pixels[y, x] = (r, g, b)
+            if cmyk_format:
+                (c, m, y, k) = rgb_to_cmyk([r, g, b])
+                pixels[y_pos, x_pos] = (c, m, y, k)
+            else:
+                pixels[y_pos, x_pos] = (r, g, b)
             index += 1
             if index > len(dec_str) / 3:
                 index = index - len(dec_str)
@@ -41,10 +68,8 @@ def main(text: str, cmyk_format: bool) -> None:
     with Halo(text="Converting data…", color="white"):
         hash_result = text_to_sha256(text)
         data = hash_to_dec(hash_result)
-        image = dec_to_image(data)
+        image = dec_to_image(data, cmyk_format)
         resized = image.resize((1500, 1500), resample=1)
-        if cmyk_format:
-            resized = resized.convert("CMYK")
         filename = text[:32] + "-" + str(resized.mode) + ".jpg"
         resized.save(filename)
 
