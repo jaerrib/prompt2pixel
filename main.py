@@ -2,10 +2,10 @@ import argparse
 import hashlib
 import math
 
-from halo import Halo
 from PIL import Image
+from halo import Halo
 
-SIZE: tuple[int] = (8, 8)
+SIZE: tuple[int, int] = (8, 8)
 
 
 def text_to_sha256(text: str) -> str:
@@ -23,12 +23,12 @@ def hash_to_dec(hash_string: str) -> list[int]:
     return integer_list
 
 
-def rgb_to_cmyk(rgb: list[int]) -> tuple[int]:
+def rgb_to_cmyk(rgb: list[int]) -> tuple[int, int, int] | tuple[int, int, int, int]:
     r, g, b = [x / 255.0 for x in rgb]
 
     k = 1 - max(r, g, b)
     if k == 255:
-        return (0, 0, 0, 255)
+        return 0, 0, 0, 255
 
     c = (1 - r - k) / (1 - k)
     m = (1 - g - k) / (1 - k)
