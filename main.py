@@ -82,6 +82,7 @@ def main(text: str, cmyk_format: bool) -> None:
         resized = image.resize((1500, 1500), resample=1)
         filename = text[:32] + "-" + str(resized.mode) + ".jpg"
         resized.save(filename)
+        print(f"\nImage saved as {filename}")
 
 
 parser = argparse.ArgumentParser()
