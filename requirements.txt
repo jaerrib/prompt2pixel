@@ -20,3 +20,5 @@ spinners==0.0.24
     # via halo
 termcolor==2.5.0
     # via halo
+wonderwords==2.2.0
+    # via -r requirements.in

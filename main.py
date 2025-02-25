@@ -2,8 +2,9 @@ import argparse
 import hashlib
 import math
 
-from PIL import Image
 from halo import Halo
+from PIL import Image
+from wonderwords import RandomSentence
 
 SIZE: tuple[int, int] = (8, 8)
 
@@ -74,7 +75,7 @@ def dec_to_image(dec_str: list[int], cmyk_format: bool) -> Image.Image:
     return img
 
 
-def main(text: str, cmyk_format: bool) -> None:
+def main(text: str, cmyk_format: bool, random_sentence: bool) -> None:
     with Halo(text="Converting data…", color="white"):
         hash_result = text_to_sha256(text)
         data = hash_to_dec(hash_result)
@@ -82,16 +83,27 @@ def main(text: str, cmyk_format: bool) -> None:
         resized = image.resize((1500, 1500), resample=1)
         filename = text[:32] + "-" + str(resized.mode) + ".jpg"
         resized.save(filename)
+        print(f"\nUsed random text '{text}'") if random_sentence else None
         print(f"\nImage saved as {filename}")
 
 
 parser = argparse.ArgumentParser()
-parser.add_argument("text", type=str, help="The input string")
+parser.add_argument(
+    "text", type=str, help="The input string", nargs="?", default="test string"
+)
 parser.add_argument(
     "-c",
     "--cmyk_format",
     help="Add to export CMYK instead of RGB",
     action="store_true",
 )
+parser.add_argument(
+    "-r",
+    "--random_sentence",
+    help="Generate a random sentence to use as text",
+    action="store_true",
+)
+
 args = parser.parse_args()
-main(text=args.text, cmyk_format=args.cmyk_format)
+args.text = RandomSentence().simple_sentence() if args.random_sentence else None
+main(text=args.text, cmyk_format=args.cmyk_format, random_sentence=args.random_sentence)
