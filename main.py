@@ -2,8 +2,8 @@ import argparse
 import hashlib
 import math
 
-from halo import Halo
 from PIL import Image
+from halo import Halo
 from wonderwords import RandomSentence
 
 SIZE: tuple[int, int] = (8, 8)
@@ -105,5 +105,5 @@ parser.add_argument(
 )
 
 args = parser.parse_args()
-args.text = RandomSentence().simple_sentence() if args.random_sentence else None
+args.text = RandomSentence().simple_sentence() if args.random_sentence else args.text
 main(text=args.text, cmyk_format=args.cmyk_format, random_sentence=args.random_sentence)
