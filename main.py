@@ -6,7 +6,7 @@ from PIL import Image
 from halo import Halo
 from wonderwords import RandomSentence
 
-SIZE: tuple[int, int] = (8, 8)
+SIZE: tuple[int, int] = (16, 16)
 
 
 def text_to_sha512(text: str) -> str:
