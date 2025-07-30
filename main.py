@@ -14,12 +14,12 @@ def text_to_sha512(text: str) -> str:
 
 
 def hash_to_dec(hash_string: str) -> list[int]:
-    integer_list = []
+    integer_list: list[int] = []
     for i in range(0, len(hash_string) - 1, 2):
-        a = hash_string[i]
-        b = hash_string[i + 1]
-        c = a + b
-        dec = int(c, 16)
+        a: str = hash_string[i]
+        b: str = hash_string[i + 1]
+        c: str = a + b
+        dec: int = int(c, 16)
         integer_list.append(dec)
     return integer_list
 
@@ -45,20 +45,20 @@ def rgb_to_cmyk(rgb: list[int]) -> tuple[int, int, int] | tuple[int, int, int, i
 
 def create_image(cmyk_format: bool) -> Image.Image:
     if cmyk_format:
-        img = Image.new("CMYK", SIZE)
+        img: Image.Image = Image.new("CMYK", SIZE)
     else:
-        img = Image.new("RGB", SIZE)
+        img: Image.Image = Image.new("RGB", SIZE)
     return img
 
 
 def set_pixels(img: Image.Image, dec_str: list[int], cmyk_format: bool) -> None:
-    pixels = img.load()
-    index = 0
+    pixels: Image = img.load()
+    index: int = 0
     for y_pos in range(SIZE[0]):
         for x_pos in range(SIZE[1]):
-            r = dec_str[index]
-            g = dec_str[index + 1]
-            b = dec_str[index + 2]
+            r: int = dec_str[index]
+            g: int = dec_str[index + 1]
+            b: int = dec_str[index + 2]
             if cmyk_format:
                 c, m, y, k = rgb_to_cmyk([r, g, b])
                 pixels[x_pos, y_pos] = (c, m, y, k)
@@ -70,18 +70,18 @@ def set_pixels(img: Image.Image, dec_str: list[int], cmyk_format: bool) -> None:
 
 
 def dec_to_image(dec_str: list[int], cmyk_format: bool) -> Image.Image:
-    img = create_image(cmyk_format)
+    img: Image.Image = create_image(cmyk_format)
     set_pixels(img, dec_str, cmyk_format)
     return img
 
 
 def main(text: str, cmyk_format: bool, random_sentence: bool) -> None:
     with Halo(text="Converting data…", color="white"):
-        hash_result = text_to_sha512(text)
-        data = hash_to_dec(hash_result)
-        image = dec_to_image(data, cmyk_format)
-        resized = image.resize((1500, 1500), resample=1)
-        filename = text[:32] + "-" + str(resized.mode) + ".jpg"
+        hash_result: str = text_to_sha512(text)
+        data: list[int] = hash_to_dec(hash_result)
+        image: Image.Image = dec_to_image(data, cmyk_format)
+        resized: Image.Image = image.resize((1500, 1500), resample=1)
+        filename: str = text[:32] + "-" + str(resized.mode) + ".jpg"
         resized.save(filename)
         print(f"\nUsed random text '{text}'") if random_sentence else None
         print(f"\nImage saved as {filename}")
