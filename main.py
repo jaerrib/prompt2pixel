@@ -9,8 +9,8 @@ from wonderwords import RandomSentence
 SIZE: tuple[int, int] = (8, 8)
 
 
-def text_to_sha256(text: str) -> str:
-    return hashlib.sha256(text.encode()).hexdigest()
+def text_to_sha512(text: str) -> str:
+    return hashlib.sha512(text.encode()).hexdigest()
 
 
 def hash_to_dec(hash_string: str) -> list[int]:
@@ -77,7 +77,7 @@ def dec_to_image(dec_str: list[int], cmyk_format: bool) -> Image.Image:
 
 def main(text: str, cmyk_format: bool, random_sentence: bool) -> None:
     with Halo(text="Converting data…", color="white"):
-        hash_result = text_to_sha256(text)
+        hash_result = text_to_sha512(text)
         data = hash_to_dec(hash_result)
         image = dec_to_image(data, cmyk_format)
         resized = image.resize((1500, 1500), resample=1)
