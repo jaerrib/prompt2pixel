@@ -6,9 +6,24 @@ from PIL import Image
 from halo import Halo
 from wonderwords import RandomSentence
 
+hash_functions = {
+    "sha256": hashlib.sha256,
+    "sha384": hashlib.sha384,
+    "sha512": hashlib.sha512,
+    "sha3_256": hashlib.sha3_256,
+    "sha3_384": hashlib.sha3_384,
+    "sha3_512": hashlib.sha3_512,
+    "blake2b": hashlib.blake2b,
+    "blake2s": hashlib.blake2s,
+}
 
-def text_to_sha512(text: str, salt: str) -> str:
-    return hashlib.sha512((text + salt).encode()).hexdigest()
+
+def text_to_hash(text: str, hash_type: str, salt: str) -> str:
+    if hash_type not in hash_functions:
+        raise ValueError(
+            f"Unsupported hash type. Supported types: {', '.join(hash_functions.keys())}"
+        )
+    return hash_functions[hash_type]((text + salt).encode()).hexdigest()
 
 
 def hash_to_dec(hash_string: str) -> list[int]:
@@ -25,13 +40,13 @@ def hash_to_dec(hash_string: str) -> list[int]:
 def rgb_to_cmyk(rgb: list[int]) -> tuple[int, int, int] | tuple[int, int, int, int]:
     r, g, b = [x / 255.0 for x in rgb]
 
-    k = 1 - max(r, g, b)
+    k: float = 1 - max(r, g, b)
     if k == 255:
         return 0, 0, 0, 255
 
-    c = (1 - r - k) / (1 - k)
-    m = (1 - g - k) / (1 - k)
-    y = (1 - b - k) / (1 - k)
+    c: float = (1 - r - k) / (1 - k)
+    m: float = (1 - g - k) / (1 - k)
+    y: float = (1 - b - k) / (1 - k)
 
     return (
         math.ceil(c * 255),
@@ -75,12 +90,20 @@ def dec_to_image(dec_str: list[int], cmyk_format: bool, size: int) -> Image.Imag
     return img
 
 
-def main(text: str, cmyk_format: bool, random_sentence: bool, size: int, salt: str) -> None:
-    print("SIZE", size)
+def main(
+    text: str,
+    cmyk_format: bool,
+    random_sentence: bool,
+    size: int,
+    hash_type: str,
+    salt: str,
+) -> None:
     with Halo(text="Converting data…", color="white"):
-        hash_result: str = text_to_sha512(text, salt)
-        data: list[int] = hash_to_dec(hash_result)
-        image: Image.Image = dec_to_image(data, cmyk_format, size)
+        hash_result: str = text_to_hash(text=text, hash_type=hash_type, salt=salt)
+        data: list[int] = hash_to_dec(hash_string=hash_result)
+        image: Image.Image = dec_to_image(
+            dec_str=data, cmyk_format=cmyk_format, size=size
+        )
         resized: Image.Image = image.resize((1500, 1500), resample=1)
         text = text[:-1] if random_sentence and text[-1] == "." else text
         filename: str = text[:32] + "-" + str(resized.mode) + ".jpg"
@@ -110,14 +133,18 @@ parser.add_argument(
     "--image_size",
     help="Set the square size of the base image",
     type=int,
-    default=16,
+    default=8,
 )
 parser.add_argument(
-    "--salt",
-    help="Add a salt key to make the hash unique",
-    type=str,
-    default=""
+    "--salt", help="Add a salt key to make the hash unique", type=str, default=""
 )
+parser.add_argument(
+    "--hash-type",
+    choices=list(hash_functions.keys()),
+    default="sha512",
+    help=f"Choose the hash algorithm to use. Available options: {', '.join(hash_functions.keys())}",
+)
+
 
 args = parser.parse_args()
 args.text = RandomSentence().simple_sentence() if args.random_sentence else args.text
@@ -126,5 +153,6 @@ main(
     cmyk_format=args.cmyk_format,
     random_sentence=args.random_sentence,
     size=args.image_size,
-    salt=args.salt
+    hash_type=args.hash_type,
+    salt=args.salt,
 )
