@@ -6,8 +6,6 @@ from PIL import Image
 from halo import Halo
 from wonderwords import RandomSentence
 
-SIZE: tuple[int, int] = (16, 16)
-
 
 def text_to_sha512(text: str) -> str:
     return hashlib.sha512(text.encode()).hexdigest()
@@ -43,19 +41,21 @@ def rgb_to_cmyk(rgb: list[int]) -> tuple[int, int, int] | tuple[int, int, int, i
     )
 
 
-def create_image(cmyk_format: bool) -> Image.Image:
+def create_image(cmyk_format: bool, size: int) -> Image.Image:
     if cmyk_format:
-        img: Image.Image = Image.new("CMYK", SIZE)
+        img: Image.Image = Image.new(mode="CMYK", size=(size, size))
     else:
-        img: Image.Image = Image.new("RGB", SIZE)
+        img: Image.Image = Image.new(mode="RGB", size=(size, size))
     return img
 
 
-def set_pixels(img: Image.Image, dec_str: list[int], cmyk_format: bool) -> None:
+def set_pixels(
+    img: Image.Image, dec_str: list[int], cmyk_format: bool, size: int
+) -> None:
     pixels: Image = img.load()
     index: int = 0
-    for y_pos in range(SIZE[0]):
-        for x_pos in range(SIZE[1]):
+    for y_pos in range(0, size):
+        for x_pos in range(0, size):
             r: int = dec_str[index]
             g: int = dec_str[index + 1]
             b: int = dec_str[index + 2]
@@ -69,17 +69,18 @@ def set_pixels(img: Image.Image, dec_str: list[int], cmyk_format: bool) -> None:
                 index = index - len(dec_str)
 
 
-def dec_to_image(dec_str: list[int], cmyk_format: bool) -> Image.Image:
-    img: Image.Image = create_image(cmyk_format)
-    set_pixels(img, dec_str, cmyk_format)
+def dec_to_image(dec_str: list[int], cmyk_format: bool, size: int) -> Image.Image:
+    img: Image.Image = create_image(cmyk_format, size)
+    set_pixels(img, dec_str, cmyk_format, size)
     return img
 
 
-def main(text: str, cmyk_format: bool, random_sentence: bool) -> None:
+def main(text: str, cmyk_format: bool, random_sentence: bool, size: int) -> None:
+    print("SIZE", size)
     with Halo(text="Converting data…", color="white"):
         hash_result: str = text_to_sha512(text)
         data: list[int] = hash_to_dec(hash_result)
-        image: Image.Image = dec_to_image(data, cmyk_format)
+        image: Image.Image = dec_to_image(data, cmyk_format, size)
         resized: Image.Image = image.resize((1500, 1500), resample=1)
         text = text[:-1] if random_sentence and text[-1] == "." else text
         filename: str = text[:32] + "-" + str(resized.mode) + ".jpg"
@@ -104,7 +105,19 @@ parser.add_argument(
     help="Generate a random sentence to use as text",
     action="store_true",
 )
+parser.add_argument(
+    "-s",
+    "--image_size",
+    help="Set the square size of the base image",
+    type=int,
+    default=16,
+)
 
 args = parser.parse_args()
 args.text = RandomSentence().simple_sentence() if args.random_sentence else args.text
-main(text=args.text, cmyk_format=args.cmyk_format, random_sentence=args.random_sentence)
+main(
+    text=args.text,
+    cmyk_format=args.cmyk_format,
+    random_sentence=args.random_sentence,
+    size=args.image_size,
+)
