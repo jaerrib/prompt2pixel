@@ -7,8 +7,8 @@ from halo import Halo
 from wonderwords import RandomSentence
 
 
-def text_to_sha512(text: str) -> str:
-    return hashlib.sha512(text.encode()).hexdigest()
+def text_to_sha512(text: str, salt: str) -> str:
+    return hashlib.sha512((text + salt).encode()).hexdigest()
 
 
 def hash_to_dec(hash_string: str) -> list[int]:
@@ -75,10 +75,10 @@ def dec_to_image(dec_str: list[int], cmyk_format: bool, size: int) -> Image.Imag
     return img
 
 
-def main(text: str, cmyk_format: bool, random_sentence: bool, size: int) -> None:
+def main(text: str, cmyk_format: bool, random_sentence: bool, size: int, salt: str) -> None:
     print("SIZE", size)
     with Halo(text="Converting data…", color="white"):
-        hash_result: str = text_to_sha512(text)
+        hash_result: str = text_to_sha512(text, salt)
         data: list[int] = hash_to_dec(hash_result)
         image: Image.Image = dec_to_image(data, cmyk_format, size)
         resized: Image.Image = image.resize((1500, 1500), resample=1)
@@ -112,6 +112,12 @@ parser.add_argument(
     type=int,
     default=16,
 )
+parser.add_argument(
+    "--salt",
+    help="Add a salt key to make the hash unique",
+    type=str,
+    default=""
+)
 
 args = parser.parse_args()
 args.text = RandomSentence().simple_sentence() if args.random_sentence else args.text
@@ -120,4 +126,5 @@ main(
     cmyk_format=args.cmyk_format,
     random_sentence=args.random_sentence,
     size=args.image_size,
+    salt=args.salt
 )
