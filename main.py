@@ -81,6 +81,7 @@ def main(text: str, cmyk_format: bool, random_sentence: bool) -> None:
         data: list[int] = hash_to_dec(hash_result)
         image: Image.Image = dec_to_image(data, cmyk_format)
         resized: Image.Image = image.resize((1500, 1500), resample=1)
+        text = text[:-1] if random_sentence and text[-1] == "." else text
         filename: str = text[:32] + "-" + str(resized.mode) + ".jpg"
         resized.save(filename)
         print(f"\nUsed random text '{text}'") if random_sentence else None
