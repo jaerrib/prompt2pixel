@@ -136,20 +136,22 @@ def create_hash_video(
     fps: int,
     vh: int,
     vw: int,
-    output_file: str = "hash_animation.mp4",
 ) -> None:
     fourcc = cv2.VideoWriter_fourcc(*"mp4v")
-    out = cv2.VideoWriter(output_file, fourcc, fps, (vw, vh))
+    filename: str = text[:32] + ".mp4"
+    out = cv2.VideoWriter(filename, fourcc, fps, (vw, vh))
     with Halo(text="Generating video frames...", color="white"):
         for i in range(frames):
-            hash_result = text_to_hash(text, hash_type=hash_type, salt=str(i))
-            data = hash_to_dec(hash_result)
-            pil_image = dec_to_image(data, cmyk_format=False, size=size)
-            resized_image = pil_image.resize((vw, vh), resample=1)
+            hash_result: str = text_to_hash(text=text, hash_type=hash_type, salt=str(i))
+            data: list[int] = hash_to_dec(hash_string=hash_result)
+            image: Image.Image = dec_to_image(
+                dec_str=data, cmyk_format=False, size=size
+            )
+            resized_image = image.resize((vw, vh), resample=1)
             opencv_image = cv2.cvtColor(np.array(resized_image), cv2.COLOR_RGB2BGR)
             out.write(opencv_image)
     out.release()
-    print(f"Video saved as {output_file}")
+    print(f"Video saved as {filename}")
 
 
 parser = argparse.ArgumentParser()
