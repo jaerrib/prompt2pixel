@@ -133,9 +133,9 @@ def create_hash_video(
     hash_type: str,
     frames: int,
     size: int,
-    fps: int = 30,
-    vh: int = 480,
-    vw: int = 640,
+    fps: int,
+    vh: int,
+    vw: int,
     output_file: str = "hash_animation.mp4",
 ) -> None:
     fourcc = cv2.VideoWriter_fourcc(*"mp4v")
