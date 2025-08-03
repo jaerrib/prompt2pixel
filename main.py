@@ -115,10 +115,8 @@ def main(
                 vw=vw,
             )
         else:
-            hash_result: str = text_to_hash(text=text, hash_type=hash_type, salt=salt)
-            data: list[int] = hash_to_dec(hash_string=hash_result)
-            image: Image.Image = dec_to_image(
-                dec_str=data, cmyk_format=cmyk_format, size=size
+            image: Image.Image = convert_text_to_image(
+                text=text, hash_type=hash_type, salt=salt, size=size, cmyk_format=False
             )
             resized: Image.Image = image.resize((1500, 1500), resample=1)
             text = text[:-1] if random_sentence and text[-1] == "." else text
@@ -142,16 +140,27 @@ def create_hash_video(
     out = cv2.VideoWriter(filename, fourcc, fps, (vw, vh))
     with Halo(text="Generating video frames...", color="white"):
         for i in range(frames):
-            hash_result: str = text_to_hash(text=text, hash_type=hash_type, salt=str(i))
-            data: list[int] = hash_to_dec(hash_string=hash_result)
-            image: Image.Image = dec_to_image(
-                dec_str=data, cmyk_format=False, size=size
+            image: Image.Image = convert_text_to_image(
+                text=text,
+                hash_type=hash_type,
+                salt=str(i),
+                size=size,
+                cmyk_format=False,
             )
             resized_image = image.resize((vw, vh), resample=1)
             opencv_image = cv2.cvtColor(np.array(resized_image), cv2.COLOR_RGB2BGR)
             out.write(opencv_image)
     out.release()
     print(f"Video saved as {filename}")
+
+
+def convert_text_to_image(
+    text: str, hash_type: str, salt: str, size: int, cmyk_format: bool
+) -> Image.Image:
+    hash_result: str = text_to_hash(text=text, hash_type=hash_type, salt=salt)
+    data: list[int] = hash_to_dec(hash_string=hash_result)
+    image: Image.Image = dec_to_image(dec_str=data, cmyk_format=cmyk_format, size=size)
+    return image
 
 
 parser = argparse.ArgumentParser()
