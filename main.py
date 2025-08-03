@@ -2,6 +2,8 @@ import argparse
 import hashlib
 import math
 
+import cv2
+import numpy as np
 from PIL import Image
 from halo import Halo
 from wonderwords import RandomSentence
@@ -37,17 +39,20 @@ def hash_to_dec(hash_string: str) -> list[int]:
     return integer_list
 
 
+def dec_to_image(dec_str: list[int], cmyk_format: bool, size: int) -> Image.Image:
+    img: Image.Image = create_image(cmyk_format, size)
+    set_pixels(img, dec_str, cmyk_format, size)
+    return img
+
+
 def rgb_to_cmyk(rgb: list[int]) -> tuple[int, int, int] | tuple[int, int, int, int]:
     r, g, b = [x / 255.0 for x in rgb]
-
     k: float = 1 - max(r, g, b)
     if k == 255:
         return 0, 0, 0, 255
-
     c: float = (1 - r - k) / (1 - k)
     m: float = (1 - g - k) / (1 - k)
     y: float = (1 - b - k) / (1 - k)
-
     return (
         math.ceil(c * 255),
         math.ceil(m * 255),
@@ -84,12 +89,6 @@ def set_pixels(
                 index = index - len(dec_str)
 
 
-def dec_to_image(dec_str: list[int], cmyk_format: bool, size: int) -> Image.Image:
-    img: Image.Image = create_image(cmyk_format, size)
-    set_pixels(img, dec_str, cmyk_format, size)
-    return img
-
-
 def main(
     text: str,
     cmyk_format: bool,
@@ -97,19 +96,71 @@ def main(
     size: int,
     hash_type: str,
     salt: str,
+    video: bool,
+    frames: int,
+    image_size: int,
+    fps: int,
+    vh: int,
+    vw: int,
 ) -> None:
     with Halo(text="Converting data…", color="white"):
-        hash_result: str = text_to_hash(text=text, hash_type=hash_type, salt=salt)
-        data: list[int] = hash_to_dec(hash_string=hash_result)
-        image: Image.Image = dec_to_image(
-            dec_str=data, cmyk_format=cmyk_format, size=size
-        )
-        resized: Image.Image = image.resize((1500, 1500), resample=1)
-        text = text[:-1] if random_sentence and text[-1] == "." else text
-        filename: str = text[:32] + "-" + str(resized.mode) + ".jpg"
-        resized.save(filename)
-        print(f"\nUsed random text '{text}'") if random_sentence else None
-        print(f"\nImage saved as {filename}")
+        if video:
+            create_hash_video(
+                text=text,
+                hash_type=hash_type,
+                frames=frames,
+                size=image_size,
+                fps=fps,
+                vh=vh,
+                vw=vw,
+            )
+        else:
+            image: Image.Image = convert_text_to_image(
+                text=text, hash_type=hash_type, salt=salt, size=size, cmyk_format=False
+            )
+            resized: Image.Image = image.resize((1500, 1500), resample=1)
+            text = text[:-1] if random_sentence and text[-1] == "." else text
+            filename: str = text[:32] + "-" + str(resized.mode) + ".jpg"
+            resized.save(filename)
+            print(f"\nUsed random text '{text}'") if random_sentence else None
+            print(f"\nImage saved as {filename}")
+
+
+def create_hash_video(
+    text: str,
+    hash_type: str,
+    frames: int,
+    size: int,
+    fps: int,
+    vh: int,
+    vw: int,
+) -> None:
+    fourcc = cv2.VideoWriter_fourcc(*"mp4v")
+    filename: str = text[:32] + ".mp4"
+    out = cv2.VideoWriter(filename, fourcc, fps, (vw, vh))
+    with Halo(text="Generating video frames...", color="white"):
+        for i in range(frames):
+            image: Image.Image = convert_text_to_image(
+                text=text,
+                hash_type=hash_type,
+                salt=str(i),
+                size=size,
+                cmyk_format=False,
+            )
+            resized_image = image.resize((vw, vh), resample=1)
+            opencv_image = cv2.cvtColor(np.array(resized_image), cv2.COLOR_RGB2BGR)
+            out.write(opencv_image)
+    out.release()
+    print(f"Video saved as {filename}")
+
+
+def convert_text_to_image(
+    text: str, hash_type: str, salt: str, size: int, cmyk_format: bool
+) -> Image.Image:
+    hash_result: str = text_to_hash(text=text, hash_type=hash_type, salt=salt)
+    data: list[int] = hash_to_dec(hash_string=hash_result)
+    image: Image.Image = dec_to_image(dec_str=data, cmyk_format=cmyk_format, size=size)
+    return image
 
 
 parser = argparse.ArgumentParser()
@@ -144,6 +195,17 @@ parser.add_argument(
     default="sha512",
     help=f"Choose the hash algorithm to use. Available options: {', '.join(hash_functions.keys())}",
 )
+parser.add_argument(
+    "--video", action="store_true", help="Create a video instead of a single image"
+)
+parser.add_argument(
+    "--frames", type=int, default=60, help="Number of frames for video output"
+)
+parser.add_argument(
+    "--fps", type=int, default=30, help="Frames per second for video output"
+)
+parser.add_argument("--vh", type=int, default=480, help="Video height dimension")
+parser.add_argument("--vw", type=int, default=640, help="Video width dimension")
 
 
 args = parser.parse_args()
@@ -153,6 +215,12 @@ main(
     cmyk_format=args.cmyk_format,
     random_sentence=args.random_sentence,
     size=args.image_size,
-    hash_type=args.hash_type,
     salt=args.salt,
+    hash_type=args.hash_type,
+    video=args.video,
+    frames=args.frames,
+    fps=args.fps,
+    image_size=args.image_size,
+    vh=args.vh,
+    vw=args.vw,
 )
