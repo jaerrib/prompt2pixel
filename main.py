@@ -116,7 +116,11 @@ def main(
             )
         else:
             image: Image.Image = convert_text_to_image(
-                text=text, hash_type=hash_type, salt=salt, size=size, cmyk_format=False
+                text=text,
+                hash_type=hash_type,
+                salt=salt,
+                size=size,
+                cmyk_format=cmyk_format,
             )
             resized: Image.Image = image.resize((1500, 1500), resample=1)
             text = text[:-1] if random_sentence and text[-1] == "." else text
