@@ -1,11 +1,12 @@
 import argparse
 import hashlib
 import math
+import os
 
 import cv2
 import numpy as np
-from PIL import Image
 from halo import Halo
+from PIL import Image
 from wonderwords import RandomSentence
 
 
@@ -138,9 +139,10 @@ class VideoGenerator:
         fps: int,
         vh: int,
         vw: int,
+        palette_string: str,
     ) -> None:
         fourcc = cv2.VideoWriter_fourcc(*"mp4v")
-        filename: str = text[:32] + ".mp4"
+        filename: str = text[:32] + palette_string + ".mp4"
         out = cv2.VideoWriter(filename, fourcc, fps, (vw, vh))
 
         with Halo(text="Generating video frames...", color="white"):
@@ -172,8 +174,11 @@ def main(
     palette_path: str | None,
 ) -> None:
     palette = None
+    palette_string = ""
     if palette_path:
         palette = PaletteLoader.load_gpl_palette(palette_path)
+        palette_name: str = os.path.splitext(os.path.basename(palette_path))[0]
+        palette_string = f"-{palette_name}"
     hash_converter = HashConverter()
     image_generator = ImageGenerator(palette=palette)
 
@@ -187,6 +192,7 @@ def main(
             fps=fps,
             vh=vh,
             vw=vw,
+            palette_string=palette_string,
         )
     else:
         with Halo(text="Generating image...", color="white"):
@@ -196,7 +202,10 @@ def main(
             resized = image.resize((1500, 1500), resample=1)
 
             text = text[:-1] if random_sentence and text[-1] == "." else text
-            filename: str = text[:32] + "-" + str(resized.mode) + ".jpg"
+            filename: str = (
+                text[:32] + "-" + str(resized.mode) + palette_string + ".jpg"
+            )
+
             resized.save(filename)
             print(f"\nUsed random text '{text}'") if random_sentence else None
             print(f"\nImage saved as {filename}")
