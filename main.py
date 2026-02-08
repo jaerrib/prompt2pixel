@@ -1,12 +1,41 @@
 import argparse
 import hashlib
 import math
+import os
 
 import cv2
 import numpy as np
-from PIL import Image
 from halo import Halo
+from PIL import Image
 from wonderwords import RandomSentence
+
+
+class PaletteLoader:
+    @staticmethod
+    def load_gpl_palette(path: str) -> list[tuple[int, int, int]]:
+        palette = []
+        with open(path, "r") as f:
+            for line in f:
+                line = line.strip()
+                if not line or line.startswith("#"):
+                    continue
+                if line[0].isdigit():
+                    parts = line.split()
+                    r, g, b = map(int, parts[:3])
+                    palette.append((r, g, b))
+        return palette
+
+    @staticmethod
+    def nearest_color(rgb: tuple[int, int, int], palette: list[tuple[int, int, int]]):
+        r, g, b = rgb
+        best = None
+        best_dist = float("inf")
+        for pr, pg, pb in palette:
+            dist = (r - pr) ** 2 + (g - pg) ** 2 + (b - pb) ** 2
+            if dist < best_dist:
+                best_dist = dist
+                best = (pr, pg, pb)
+        return best
 
 
 class HashConverter:
@@ -40,6 +69,14 @@ class HashConverter:
 
 
 class ImageGenerator:
+    def __init__(self, palette=None):
+        self.palette = palette
+
+    def map_to_palette(self, rgb: tuple[int, int, int]) -> tuple[int, int, int]:
+        if not self.palette:
+            return rgb
+        return PaletteLoader.nearest_color(rgb, self.palette)
+
     @staticmethod
     def rgb_to_cmyk(rgb: list[int]) -> tuple[int, int, int] | tuple[int, int, int, int]:
         r, g, b = [x / 255.0 for x in rgb]
@@ -64,17 +101,18 @@ class ImageGenerator:
     def set_pixels(
         self, img: Image.Image, dec_str: list[int], cmyk_format: bool, size: int
     ) -> None:
-        pixels: Image = img.load()
+        pixels = img.load()
         index: int = 0
         for y_pos in range(0, size):
             for x_pos in range(0, size):
                 r: int = dec_str[index]
                 g: int = dec_str[index + 1]
                 b: int = dec_str[index + 2]
+                rgb: tuple[int, int, int] = self.map_to_palette((r, g, b))
                 if cmyk_format:
-                    pixels[x_pos, y_pos] = self.rgb_to_cmyk([r, g, b])
+                    pixels[x_pos, y_pos] = self.rgb_to_cmyk(list(rgb))
                 else:
-                    pixels[x_pos, y_pos] = (r, g, b)
+                    pixels[x_pos, y_pos] = rgb
                 index += 1
                 if index > (len(dec_str)) / 3:
                     index = index - len(dec_str)
@@ -101,9 +139,10 @@ class VideoGenerator:
         fps: int,
         vh: int,
         vw: int,
+        palette_string: str,
     ) -> None:
         fourcc = cv2.VideoWriter_fourcc(*"mp4v")
-        filename: str = text[:32] + ".mp4"
+        filename: str = text[:32] + palette_string + ".mp4"
         out = cv2.VideoWriter(filename, fourcc, fps, (vw, vh))
 
         with Halo(text="Generating video frames...", color="white"):
@@ -132,9 +171,16 @@ def main(
     fps: int,
     vh: int,
     vw: int,
+    palette_path: str | None,
 ) -> None:
+    palette = None
+    palette_string = ""
+    if palette_path:
+        palette = PaletteLoader.load_gpl_palette(palette_path)
+        palette_name: str = os.path.splitext(os.path.basename(palette_path))[0]
+        palette_string = f"-{palette_name}"
     hash_converter = HashConverter()
-    image_generator = ImageGenerator()
+    image_generator = ImageGenerator(palette=palette)
 
     if video:
         video_generator = VideoGenerator(hash_converter, image_generator)
@@ -146,6 +192,7 @@ def main(
             fps=fps,
             vh=vh,
             vw=vw,
+            palette_string=palette_string,
         )
     else:
         with Halo(text="Generating image...", color="white"):
@@ -155,7 +202,10 @@ def main(
             resized = image.resize((1500, 1500), resample=1)
 
             text = text[:-1] if random_sentence and text[-1] == "." else text
-            filename: str = text[:32] + "-" + str(resized.mode) + ".jpg"
+            filename: str = (
+                text[:32] + "-" + str(resized.mode) + palette_string + ".jpg"
+            )
+
             resized.save(filename)
             print(f"\nUsed random text '{text}'") if random_sentence else None
             print(f"\nImage saved as {filename}")
@@ -206,6 +256,13 @@ if __name__ == "__main__":
     parser.add_argument("--vh", type=int, default=480, help="Video height dimension")
     parser.add_argument("--vw", type=int, default=640, help="Video width dimension")
 
+    parser.add_argument(
+        "--palette",
+        type=str,
+        help="Path to a .gpl palette file to remap image colors",
+        default=None,
+    )
+
     args = parser.parse_args()
     args.text = (
         RandomSentence().simple_sentence() if args.random_sentence else args.text
@@ -223,4 +280,5 @@ if __name__ == "__main__":
         image_size=args.image_size,
         vh=args.vh,
         vw=args.vw,
+        palette_path=args.palette,
     )
