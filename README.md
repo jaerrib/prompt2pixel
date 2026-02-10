@@ -1,7 +1,6 @@
 # Prompt2pixel
 
-A small utility that uses cryptographic hashes to convert user text to an image
-or video
+A small utility that uses cryptographic hashes to convert user text to an abstract image or video
 
 > Please note that I use venv for my virtual environment and an alias, so I don't have to type python3. The sample
 > commands below are written with that in consideration.
@@ -44,12 +43,15 @@ those are not sufficient, you have a bit more control over the output:
 > When these values are combined, you can influence the total length of the video. For example, 90 frames at 30 fps will
 > result in 3 seconds of video.
 
-You can also determine the dimensions of the video by adding `--vh` and `--vw` (video height and video width) with
-integer values. **Prompt2pixel** defaults to using 640x480, but feel free to use whatever you want. Larger and longer
-videos will, of course, take longer to generate depending on your system.
 
 Video generation can use the same flags as images. A much more complete and complicated command could be:
 
 ```python
-python -m main foo -c --hash-type blake2b --salt bar -s 42 --palette spam.gpl --video --frames 90 --fps 30 --vw 1280 --vh 720
+python -m main foo -c --hash-type blake2b --salt bar -s 42 --palette spam.gpl --video --frames 90 --fps 30
 ```
+
+## Image and video sizing
+
+You can also determine the dimensions of both images and videos by adding `--vh` and `--vw` (video height and video width)
+with integer values. **Prompt2pixel** defaults to using 640x480, but feel free to use whatever you want. Image generation
+is relatively fast. However, your system specs can be a factor when making very large images or long videos.
