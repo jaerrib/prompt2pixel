@@ -13,6 +13,8 @@ You can generate a sample image with default settings by running `python -m main
 creative. By adding one flag to the command, the utility will generate image using a random sentence:
 `python -m main -r`. Alternatively, you can use your own text as input. For example, `python -m main foo`.
 
+![Example](/example_output/test_string-RGB.jpg "Sample image using the default settings")
+
 ### Advanced usage
 
 While the above is functional, there are also several ways to customize your output. Just add the flags as shown in the
