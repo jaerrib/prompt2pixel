@@ -1,6 +1,6 @@
 # Prompt2pixel
 
-A small utility that uses cryptographic hashes to convert user text to an abstract image or video
+A small utility that uses cryptographic hashes to convert user text to an abstract image (jpg) or video (mp4)
 
 > Please note that I use venv for my virtual environment and an alias, so I don't have to type python3. The sample
 > commands below are written with that in consideration.
@@ -42,7 +42,6 @@ those are not sufficient, you have a bit more control over the output:
 
 > When these values are combined, you can influence the total length of the video. For example, 90 frames at 30 fps will
 > result in 3 seconds of video.
-
 
 Video generation can use the same flags as images. A much more complete and complicated command could be:
 
