@@ -199,7 +199,7 @@ def main(
             hash_result = hash_converter.text_to_hash(text, hash_type, salt)
             data = hash_converter.hash_to_dec(hash_result)
             image = image_generator.dec_to_image(data, cmyk_format, size)
-            resized = image.resize((1500, 1500), resample=1)
+            resized = image.resize((vw, vh), resample=1)
 
             text = text[:-1] if random_sentence and text[-1] == "." else text
             filename: str = (
