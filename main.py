@@ -81,16 +81,16 @@ class ImageGenerator:
     def rgb_to_cmyk(rgb: list[int]) -> tuple[int, int, int] | tuple[int, int, int, int]:
         r, g, b = [x / 255.0 for x in rgb]
         k: float = 1 - max(r, g, b)
-        if k == 255:
+        if k == 1:
             return 0, 0, 0, 255
         c: float = (1 - r - k) / (1 - k)
         m: float = (1 - g - k) / (1 - k)
         y: float = (1 - b - k) / (1 - k)
         return (
-            math.ceil(c * 255),
-            math.ceil(m * 255),
-            math.ceil(y * 255),
-            math.ceil(k * 255),
+            round(c * 255),
+            round(m * 255),
+            round(y * 255),
+            round(k * 255),
         )
 
     @staticmethod
