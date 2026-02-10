@@ -114,8 +114,8 @@ class ImageGenerator:
                 else:
                     pixels[x_pos, y_pos] = rgb
                 index += 1
-                if index > (len(dec_str)) / 3:
-                    index = index - len(dec_str)
+                if index + 2 >= len(dec_str):
+                    index = 0
 
     def dec_to_image(
         self, dec_str: list[int], cmyk_format: bool, size: int
