@@ -1,0 +1,9 @@
+[project]
+name = "prompt2pixel"
+version = "0.1.0"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[project.scripts]
+prompt2pixel = "prompt2pixel.cli:main"
