@@ -1,58 +1,163 @@
 # Prompt2pixel
 
-A small utility that uses cryptographic hashes to convert user text to an abstract image (jpg) or video (mp4)
+ A small utility that converts user‑provided text into abstract images (JPG) or videos (MP4) by hashing the text and
+ mapping the resulting bytes into pixel data. The project is now organized into modules (`hashing.py`, `palette.py`,
+ `imagegen.py`, etc.) for easier maintenance and extension.
 
-> Please note that I use venv for my virtual environment and an alias, so I don't have to type python3. The sample
-> commands below are written with that in consideration.
+> These examples assume you’re using a virtual environment and calling python directly. Adjust as needed for your setup.
 
-## How to generate an image
+---
+
+## Installation
+
+Clone the repository and install dependencies:
+
+```bash
+pip install -r requirements.txt
+```
+
+## Installation in editable (development) mode
+
+If you want to work on the codebase or make changes locally, install the package in editable mode:
+
+```bash
+pip install -e .
+```
+
+This links the package to your working directory so changes take effect immediately. After installing (editable or
+normal), you can run `python -m prompt2pixel` from any directory.
+
+---
+
+## Running the tool
+
+```bash
+python -m prompt2pixel
+```
+
+To generate an image using your own text:
+
+```bash
+python -m prompt2pixel "hello world"
+```
+
+To generate a random sentence:
+
+```bash
+python -m prompt2pixel -r
+```
+
+---
+
+## Generating an image
 
 ### Basic usage
 
-You can generate a sample image with default settings by running `python -m main`. However, that's neither fun nor
-creative. By adding one flag to the command, the utility will generate image using a random sentence:
-`python -m main -r`. Alternatively, you can use your own text as input. For example, `python -m main foo`.
+Running the CLI with no flags generates an RGB image using default settings:
+
+```bash
+python -m prompt2pixel "foo"
+```
+
+Or let the tool generate a random sentence:
+
+```bash
+python -m prompt2pixel -r
+```
 
 ![Example](/example_output/test_string-RGB.jpg "Sample image using the default settings")
 
-### Advanced usage
+### Advanced options
 
-While the above is functional, there are also several ways to customize your output. Just add the flags as shown in the
-examples.
+You can customize the output using flags:
 
-- Export CMYK images instead of RGB by adding `-c`
-- sha512 is used as the default hashing method, but you can select a specific hash by adding `--hash-type` followed by
-  any of the following: sha256, sha384, sha512, sha3_256, sha3_384, sha3_512, blake2b, blake2s
-- Want to add a salt key to the hash? Just add `--salt` followed by a value.
-- You can also generate different types of patterns by adding `-s` with an integer.
-- **prompt2pixel** can also remap the generic color palette to any valid .gpl palette with `--palette` followed by a
-  path to a file
+- `-c`  
+  Export CMYK instead of RGB.
 
-Here's an example of a more complex command to generate an image:
+- `--hash-type <algorithm>`  
+  Choose from:  
+  `sha256`, `sha384`, `sha512`, `sha3_256`, `sha3_384`, `sha3_512`, `blake2b`, `blake2s`
 
-```python
-python -m main foo -c --hash-type blake2b --salt bar -s 42 --palette spam.gpl
+- `--salt <value>`  
+  Add a salt to the hash.
+
+- `-s <int>`  
+  Set the base square size of the generated image.
+
+- `--palette <path>`  
+  Remap colors using a `.gpl` palette file.
+
+Example:
+
+```bash
+python -m prompt2pixel "foo" -c --hash-type blake2b --salt bar -s 42 --palette spam.gpl
 ```
 
-## How to generate a video
+---
 
-Generating a video can be as simple as adding the `--video` flag, and **prompt2pixel** will use the default settings. If
-those are not sufficient, you have a bit more control over the output:
+## Generating a video
 
-- Add `--frames` followed by an integer to set the total number of frames
-- Add `--fps` followed by an integer to set the frames per second
+Add the `--video` flag to switch from image mode to video mode:
 
-> When these values are combined, you can influence the total length of the video. For example, 90 frames at 30 fps will
-> result in 3 seconds of video.
-
-Video generation can use the same flags as images. A much more complete and complicated command could be:
-
-```python
-python -m main foo -c --hash-type blake2b --salt bar -s 42 --palette spam.gpl --video --frames 90 --fps 30
+```bash
+python -m prompt2pixel "foo" --video
 ```
+
+You can customize video output:
+
+- `--frames <int>`  
+  Number of frames to generate.
+
+- `--fps <int>`  
+  Frames per second.
+
+- `--vh <int>`  
+  Video height.
+
+- `--vw <int>`  
+  Video width.
+
+Example:
+
+```bash
+python -m prompt2pixel "foo" --video --frames 90 --fps 30 --palette spam.gpl
+```
+
+
+> For reference: 90 frames at 30 fps produces a 3‑second video.
+
+---
 
 ## Image and video sizing
 
-You can also determine the dimensions of both images and videos by adding `--vh` and `--vw` (video height and video width)
-with integer values. **Prompt2pixel** defaults to using 640x480, but feel free to use whatever you want. Image generation
-is relatively fast. However, your system specs can be a factor when making very large images or long videos.
+Both images and videos can be resized using:
+
+- `--vh` (video height)
+- `--vw` (video width)
+
+Default output size is **640×480**, but you can set any dimensions your system can handle.
+
+---
+
+## Project structure
+
+The project is now organized into modules:
+
+```bash
+prompt2pixel/
+    cli.py
+    hashing.py
+    palette.py
+    imagegen.py
+    videogen.py
+```
+
+This modular layout makes it easier to extend the tool. For example, adding new hash algorithms, color spaces, or output formats.
+
+---
+
+## License
+
+This project is licensed under the **GNU Affero General Public License v3.0 (AGPL‑3.0)**.
+
+See the [LICENSE](LICENSE) file for the full text.
