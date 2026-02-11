@@ -1,10 +1,10 @@
 # Prompt2pixel
 
- A small utility that converts user‑provided text into abstract images (JPG) or videos (MP4) by hashing the text and
+ A small utility that converts user-provided text into abstract images (JPG) or videos (MP4) by hashing the text and
  mapping the resulting bytes into pixel data. The project is now organized into modules (`hashing.py`, `palette.py`,
  `imagegen.py`, etc.) for easier maintenance and extension.
 
-> These examples assume you’re using a virtual environment and calling python directly. Adjust as needed for your setup.
+> These examples assume you're using a virtual environment and calling python directly. Adjust as needed for your setup.
 
 ---
 
@@ -124,7 +124,7 @@ python -m prompt2pixel "foo" --video --frames 90 --fps 30 --palette spam.gpl
 ```
 
 
-> For reference: 90 frames at 30 fps produces a 3‑second video.
+> For reference: 90 frames at 30 fps produces a 3-second video.
 
 ---
 
@@ -135,7 +135,7 @@ Both images and videos can be resized using:
 - `--vh` (video height)
 - `--vw` (video width)
 
-Default output size is **640×480**, but you can set any dimensions your system can handle.
+Default output size is **640x480**, but you can set any dimensions your system can handle.
 
 ---
 
@@ -158,6 +158,6 @@ This modular layout makes it easier to extend the tool. For example, adding new 
 
 ## License
 
-This project is licensed under the **GNU Affero General Public License v3.0 (AGPL‑3.0)**.
+This project is licensed under the **GNU Affero General Public License v3.0 (AGPL-3.0)**.
 
 See the [LICENSE](LICENSE) file for the full text.
