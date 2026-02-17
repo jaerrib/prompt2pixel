@@ -1,7 +1,7 @@
 import unittest
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
-from prompt2pixel.cli import build_parser
+from prompt2pixel.cli import build_parser, main
 
 
 class TestCLIParser(unittest.TestCase):
@@ -75,6 +75,42 @@ class TestCLIParser(unittest.TestCase):
     def test_hash_type_invalid(self, _mock_stderr):
         with self.assertRaises(SystemExit):
             self.parser.parse_args(["--hash-type", "notahash"])
+
+
+class TestMain(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        cls.default_kwargs = dict(
+            text="hello",
+            cmyk_format=False,
+            random_sentence=False,
+            size=8,
+            hash_type="sha512",
+            salt="",
+            video=False,
+            frames=60,
+            image_size=8,
+            fps=30,
+            vh=480,
+            vw=640,
+            palette_path=None,
+        )
+
+    @patch("prompt2pixel.cli.ImageGenerator")
+    @patch("prompt2pixel.cli.HashConverter")
+    @patch("prompt2pixel.cli.Halo")
+    def test_main_generates_image(self, mock_halo, mock_hash, mock_imagegen):
+        kwargs = self.default_kwargs.copy()
+        mock_hash.return_value.text_to_hash.return_value = "abc123"
+        mock_hash.return_value.hash_to_dec.return_value = [1, 2, 3]
+        mock_img = MagicMock()
+        mock_img.resize.return_value = mock_img
+        mock_imagegen.return_value.dec_to_image.return_value = mock_img
+        main(**kwargs)
+        mock_hash.return_value.text_to_hash.assert_called_once()
+        mock_imagegen.return_value.dec_to_image.assert_called_once()
+        mock_img.save.assert_called_once()
 
 
 if __name__ == "__main__":
